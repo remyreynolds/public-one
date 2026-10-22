@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download Northstar: your study coach</title>
+<meta name="description" content="Northstar is a desktop study app for students: Canvas assignments, grades and announcements, an AI coach, and Studio writing help. Runs on your computer. Download for Mac and Windows.">
+<meta name="color-scheme" content="light dark">
+<script>
+  /* Pick the saved or system theme before first paint (no flash). */
+  (function () {
+    var saved = null;
+    try { saved = localStorage.getItem("ns-site-theme"); } catch (err) { saved = null; }
+    var dark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
+  })();
+</script>
+<style>
+/* ---------- Design tokens: copied from the app (src/redesign/tokens.css), Warm scheme ---------- */
+:root, [data-theme="light"] {
+  --bg: #f8f7f4; --canvas: #fbfaf8; --panel: #ffffff; --side: #f2f0ec;
+  --ink: #1f1e1c; --ink2: #3d3b37; --mute: #6c6860; --faint: #716c64;
+  --line: #e7e3dc; --line-strong: #d9d4cb;
+  --accent: #d0743b; --accent-ink: #1a1612; --accent-soft: rgba(208,116,59,.12); --accent-text: #9c5022;
+  --logo-tile: #1d1c1a; --logo-star: #f4efe6;
+  --shadow: 0 1px 2px rgba(20,18,15,.05), 0 8px 28px rgba(20,18,15,.07);
+  --shadow-big: 0 2px 6px rgba(20,18,15,.08), 0 30px 80px rgba(20,18,15,.18);
+}
+[data-theme="dark"] {
+  --bg: #191918; --canvas: #1d1d1c; --panel: #232322; --side: #151514;
+  --ink: #ecebe7; --ink2: #d6d4cf; --mute: #a29e96; --faint: #8f8b84;
+  --line: #2f2e2b; --line-strong: #3d3c38;
+  --accent: #e58a52; --accent-ink: #1a1612; --accent-soft: rgba(229,138,82,.16); --accent-text: #ec9a66;
+  --logo-tile: #2a2825; --logo-star: #f4efe6;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 28px rgba(0,0,0,.35);
+  --shadow-big: 0 2px 6px rgba(0,0,0,.4), 0 30px 80px rgba(0,0,0,.55);
+}
+:root {
+  --font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --read: ui-serif, "Iowan Old Style", "Charter", "Source Serif 4", Georgia, "Times New Roman", serif;
+  --r-ctl: 9px; --r-lg: 18px; --r-xl: 24px; --r-pill: 999px;
+  --wrap: 1120px;
+}
+[data-theme="light"] { color-scheme: light; } [data-theme="dark"] { color-scheme: dark; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.55 var(--font); -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; display: block; }
+a { color: var(--accent-text); }
+h1, h2, h3 { line-height: 1.12; letter-spacing: -.025em; margin: 0; }
+p { margin: 0; }
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 24px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--ink); color: var(--canvas); padding: 8px 14px; border-radius: var(--r-ctl); z-index: 100; }
+.skip:focus { left: 8px; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Header ---------- */
+header.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--canvas) 86%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.bar { display: flex; align-items: center; gap: 20px; height: 62px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 650; letter-spacing: -.025em; font-size: 19px; }
+.brand svg { display: block; }
+.nav { display: flex; gap: 22px; margin-left: 12px; }
+.nav a { color: var(--mute); text-decoration: none; font-size: 14.5px; font-weight: 520; }
+.nav a:hover { color: var(--ink); }
+.spacer { flex: 1; }
+.icon-btn { width: 38px; height: 38px; border-radius: var(--r-ctl); border: 1px solid var(--line); background: var(--panel); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.icon-btn:hover { border-color: var(--line-strong); }
+.icon-btn svg { width: 18px; height: 18px; }
+.i-sun { display: none; } [data-theme="dark"] .i-sun { display: block; } [data-theme="dark"] .i-moon { display: none; }
+
+/* ---------- Buttons ---------- */
+.btn { display: inline-flex; align-items: center; gap: 10px; border-radius: 12px; padding: 14px 22px; font: 600 16px/1 var(--font); text-decoration: none; border: 1px solid transparent; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn-pri { background: var(--ink); color: var(--canvas); box-shadow: var(--shadow); }
+.btn-sec { background: var(--panel); color: var(--ink); border-color: var(--line-strong); }
+.btn small { display: block; font: 500 12px/1.2 var(--font); opacity: .72; margin-top: 4px; }
+.btn .two { display: block; }
+.btn-lg { padding: 15px 24px; }
+.btn.sm { padding: 10px 16px; font-size: 14.5px; }
+
+/* ---------- Hero ---------- */
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--accent-text); background: var(--accent-soft); padding: 6px 14px; border-radius: var(--r-pill); }
+.cta { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-top: 34px; }
+.meta { margin-top: 16px; font-size: 13.5px; color: var(--mute); min-height: 20px; }
+.meta b { color: var(--ink2); font-weight: 600; }
+.shot-hero { margin: 54px auto 0; max-width: 1060px; }
+.frame { border-radius: 16px; overflow: hidden; border: 1px solid var(--line-strong); box-shadow: var(--shadow-big); background: var(--panel); }
+.frame .chrome { display: flex; gap: 7px; padding: 11px 14px; background: var(--side); border-bottom: 1px solid var(--line); }
+.frame .chrome i { width: 11px; height: 11px; border-radius: 50%; background: var(--line-strong); }
+.frame img { width: 100%; height: auto; }
+.theme-img.dark { display: none; }
+[data-theme="dark"] .theme-img.light { display: none; }
+[data-theme="dark"] .theme-img.dark { display: block; }
+
+/* ---------- Sections ---------- */
+section { padding: 84px 0; }
+.sec-head { max-width: 680px; margin: 0 auto 46px; text-align: center; }
+.sec-head h2 { font-size: clamp(28px, 4vw, 42px); }
+.sec-head p { margin-top: 14px; color: var(--ink2); font-size: 18px; }
+.alt { background: var(--bg); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.feature { display: grid; grid-template-columns: 1fr 1.35fr; gap: 54px; align-items: center; margin-top: 78px; }
+.feature:first-of-type { margin-top: 0; }
+.feature.flip { grid-template-columns: 1.35fr 1fr; }
+.feature.flip .ftext { order: 2; }
+.kicker { font-size: 13px; font-weight: 650; letter-spacing: .06em; text-transform: uppercase; color: var(--accent-text); }
+.ftext h3 { font-size: clamp(25px, 3vw, 34px); margin: 10px 0 14px; }
+.ftext p { color: var(--ink2); font-size: 17px; }
+.ftext ul { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.ftext li { display: flex; gap: 10px; color: var(--ink2); font-size: 15.5px; }
+.ftext li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 3px; border-radius: 50%; background: var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M5 9.4l2.6 2.6L13 6.6' fill='none' stroke='%23b8612c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px; box-shadow: var(--shadow); }
+.card h3 { font-size: 19px; letter-spacing: -.015em; margin: 14px 0 8px; }
+.card p { color: var(--ink2); font-size: 15.5px; }
+.ico { width: 42px; height: 42px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-text); display: grid; place-items: center; }
+.ico svg { width: 22px; height: 22px; }
+
+/* ---------- Color schemes ---------- */
+.schemes { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 0 0 28px; padding: 0; list-style: none; }
+.schemes button { display: inline-flex; align-items: center; gap: 9px; padding: 9px 16px 9px 12px; border-radius: var(--r-pill); border: 1px solid var(--line-strong); background: var(--panel); color: var(--ink); font: 600 14.5px var(--font); cursor: pointer; }
+.schemes button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.schemes .dot { width: 16px; height: 16px; border-radius: 50%; }
+.scheme-shot { max-width: 940px; margin: 0 auto; }
+.scheme-note { text-align: center; color: var(--mute); font-size: 14px; margin-top: 16px; }
+
+/* ---------- Privacy ---------- */
+.privacy { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.priv-big { max-width: 760px; margin: 0 auto 40px; text-align: center; font-family: var(--read); font-size: clamp(22px, 3vw, 30px); line-height: 1.35; color: var(--ink); }
+
+/* ---------- Requirements / FAQ ---------- */
+.reqs { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; max-width: 820px; margin: 0 auto; }
+.reqs h3 { font-size: 18px; margin-bottom: 12px; display: flex; gap: 10px; align-items: center; }
+.reqs ul { margin: 0; padding-left: 18px; color: var(--ink2); display: grid; gap: 6px; font-size: 15.5px; }
+.faq { max-width: 780px; margin: 0 auto; display: grid; gap: 10px; }
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 0 20px; }
+details[open] { box-shadow: var(--shadow); }
+summary { cursor: pointer; list-style: none; padding: 18px 28px 18px 0; font-weight: 620; font-size: 17px; position: relative; letter-spacing: -.01em; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: ""; position: absolute; right: 2px; top: 50%; width: 9px; height: 9px; border-right: 2px solid var(--mute); border-bottom: 2px solid var(--mute); transform: translateY(-70%) rotate(45deg); transition: transform .15s; }
+details[open] summary::after { transform: translateY(-30%) rotate(225deg); }
+details .ans { padding: 0 0 20px; color: var(--ink2); font-size: 16px; }
+details .ans p + p, details .ans ol { margin-top: 10px; }
+details .ans ol { padding-left: 20px; display: grid; gap: 6px; }
+kbd { font: 600 12.5px var(--font); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px; background: var(--panel); }
+
+/* ---------- Final CTA / footer ---------- */
+.final { text-align: center; }
+.final .brand-big { display: inline-block; margin-bottom: 18px; }
+.final h2 { font-size: clamp(30px, 4.4vw, 46px); }
+.final p { color: var(--ink2); margin: 14px auto 0; max-width: 520px; font-size: 18px; }
+footer { border-top: 1px solid var(--line); padding: 34px 0 50px; color: var(--mute); font-size: 14px; }
+footer .row { display: flex; flex-wrap: wrap; gap: 14px 28px; align-items: center; justify-content: space-between; }
+footer a { color: var(--mute); }
+
+
+/* ---------- Log in link ---------- */
+@media (max-width: 520px) { .bar { gap: 10px; } .btn.sm { padding: 9px 13px; } }
+
+/* ---------- Chat demo (animation lives in chat-demo.html, built from the app's real card styles) ---------- */
+.demo-sec { padding-top: 54px; }
+.cap { text-align: center; color: var(--mute); font-size: 13.5px; margin-top: 14px; }
+.tag { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: var(--r-pill); vertical-align: 1px; }
+.tag.illus { background: var(--accent-soft); color: var(--accent-text); }
+
+/* ---------- Assistants (MCP) ---------- */
+.steps3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; counter-reset: st; max-width: 960px; margin: 0 auto 54px; padding: 0; list-style: none; }
+.steps3 li { counter-increment: st; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 22px 22px 22px 22px; box-shadow: var(--shadow); color: var(--ink2); font-size: 15.5px; }
+.steps3 li::before { content: counter(st); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-text); font-weight: 700; margin-bottom: 12px; }
+.steps3 b { color: var(--ink); display: block; font-size: 16.5px; margin-bottom: 4px; }
+.can { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 34px; max-width: 860px; margin: 0 auto 50px; padding: 0; list-style: none; }
+.can li { display: flex; gap: 10px; color: var(--ink2); font-size: 16px; }
+.can li::before { content: ""; flex: none; width: 18px; height: 18px; margin-top: 4px; border-radius: 50%; background: var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 18 18'%3E%3Cpath d='M5 9.4l2.6 2.6L13 6.6' fill='none' stroke='%23b8612c' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px no-repeat; }
+.shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 34px 26px; max-width: 1060px; margin: 0 auto; }
+.shots figure { margin: 0; min-width: 0; }
+.shots figure.wide { grid-column: 1 / -1; max-width: 760px; margin: 0 auto; width: 100%; }
+.shots img { width: 100%; height: auto; border-radius: 12px; box-shadow: var(--shadow-big); }
+.shots figcaption { margin-top: 12px; font-size: 13.5px; color: var(--mute); text-align: center; }
+.shots h3 { font-size: 15px; letter-spacing: -.01em; text-align: center; margin: 0 0 12px; color: var(--ink2); font-weight: 650; }
+.sub-h { text-align: center; margin: 56px 0 26px; font-size: 22px; }
+/* Chat-window illustrations: general style of each app, plain text names, no logos */
+.mock { border-radius: 14px; overflow: hidden; border: 1px solid #d9d6cf; box-shadow: var(--shadow-big); font-size: 14.5px; line-height: 1.55; text-align: left; }
+.mock .mbar { display: flex; align-items: center; gap: 8px; padding: 11px 16px; font-weight: 650; font-size: 14px; }
+.mock .mbody { padding: 18px 20px 22px; display: grid; gap: 14px; }
+.mock .mq { justify-self: end; max-width: 86%; padding: 10px 15px; border-radius: 18px; }
+.mock .tool { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 5px 11px; border-radius: 9px; width: fit-content; }
+.mock .tool i { width: 7px; height: 7px; border-radius: 50%; background: #2f8f5e; }
+.mock p { margin: 0; }
+.mock blockquote { margin: 8px 0 0; padding: 8px 0 8px 14px; border-left: 3px solid; font-style: italic; }
+.mock .chip { display: inline-block; font-size: 12px; font-weight: 650; padding: 1px 8px; border-radius: 6px; margin-left: 4px; font-style: normal; }
+.mock.gpt { background: #ffffff; color: #1b1b1b; font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+.mock.gpt .mbar { border-bottom: 1px solid #ececec; color: #333; }
+.mock.gpt .mq { background: #f1f1f1; }
+.mock.gpt .tool { background: #f6f6f6; border: 1px solid #e6e6e6; color: #555; }
+.mock.gpt .chip { background: #e8f3ee; color: #1b6a49; }
+.mock.gpt ul { margin: 6px 0 0; padding-left: 20px; }
+.mock.cld { background: #faf9f5; color: #29261f; font-family: ui-serif, Georgia, "Times New Roman", serif; border-color: #e6e2d6; }
+.mock.cld .mbar { border-bottom: 1px solid #ece8dc; color: #4b463a; font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+.mock.cld .mq { background: #efece1; font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; border-radius: 12px; }
+.mock.cld .tool { background: #f1eee3; border: 1px solid #e3ded0; color: #6a6354; font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+.mock.cld blockquote { border-color: #d3a68a; color: #5a5242; }
+.mock.cld .chip { background: #f3e2d6; color: #8a4b22; font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+@media (max-width: 900px) { .steps3 { grid-template-columns: 1fr; } .can { grid-template-columns: 1fr; } .shots { grid-template-columns: 1fr; } }
+
+
+/* ---------- Hero: the whole app main screen, animated ---------- */
+.hero { padding: 26px 0 34px; background: radial-gradient(900px 420px at 30% -80px, var(--accent-soft), transparent 70%); }
+.hero .wrap { max-width: 1280px; }
+.hero-grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(0, .8fr); grid-template-areas: "demo head" "demo cta"; column-gap: 46px; align-items: center; }
+.hero-head { grid-area: head; align-self: end; text-align: left; padding-bottom: 8px; }
+.hero-demo { grid-area: demo; min-width: 0; }
+.hero-cta { grid-area: cta; align-self: start; text-align: left; }
+.hero h1 { font-size: clamp(30px, 2.9vw, 42px); margin: 16px 0 0; }
+.hero h1 em { font-style: normal; color: var(--accent-text); }
+.hero .lede { font-size: clamp(15.5px, 1.3vw, 17.5px); color: var(--ink2); margin: 14px 0 0; }
+.hero .cta { justify-content: flex-start; flex-direction: column; align-items: stretch; margin-top: 22px; gap: 12px; }
+.hero .cta .btn { justify-content: flex-start; }
+.hero .meta { text-align: left; }
+.hero-demo iframe { display: block; width: 100%; aspect-ratio: 1.48; border: 0; background: transparent; }
+.hero-demo .cap { margin-top: 4px; }
+.feature-shot { margin: 0 auto 78px; }
+@media (max-width: 980px) {
+  .hero-grid { grid-template-columns: 1fr; grid-template-areas: "head" "cta" "demo"; row-gap: 18px; }
+  .hero-head, .hero-cta { text-align: center; align-self: auto; }
+  .hero .lede { display: none; }
+  .hero .cta { flex-direction: row; justify-content: center; align-items: stretch; flex-wrap: wrap; }
+  .hero .meta { text-align: center; }
+  .hero h1 { font-size: clamp(30px, 5vw, 42px); }
+}
+@media (max-width: 620px) { .hero { padding-top: 18px; } .hero h1 { font-size: 28px; margin-top: 12px; } .hero .cta { margin-top: 16px; } .hero .cta .btn { width: 100%; justify-content: center; } .hero-demo iframe { aspect-ratio: .78; } }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+  .feature, .feature.flip { grid-template-columns: 1fr; gap: 28px; margin-top: 60px; }
+  .feature.flip .ftext { order: 0; }
+  .grid3, .privacy { grid-template-columns: 1fr; }
+  .nav { display: none; }
+  section { padding: 62px 0; }
+}
+@media (max-width: 620px) {
+  .wrap { padding: 0 18px; }
+  
+  .reqs { grid-template-columns: 1fr; }
+  .cta .btn { width: 100%; justify-content: center; }
+  .shot-hero { margin-top: 36px; }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .btn { transition: none; } }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap bar">
+    <a class="brand" href="#top" aria-label="Northstar home"><span data-brand-logo></span><span data-brand-wordmark></span></a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#assistants">Claude &amp; ChatGPT</a>
+      <a href="#privacy">Privacy</a>
+      <a href="#requirements">Requirements</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <span class="spacer"></span>
+    <a class="btn btn-pri sm hdr-dl" href="#download" data-dl-nav>Download</a>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch between light and dark" aria-pressed="false">
+      <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+<div id="top"></div>
+<!-- ================= HERO (the chat animation is the hero) ================= -->
+<div class="hero" id="download">
+  <div class="wrap hero-grid">
+    <div class="hero-head">
+      <span class="eyebrow"><span data-brand-tagline></span> · Mac and Windows</span>
+      <h1>Every class, every deadline, <em>one calm place</em>.</h1>
+      <p class="lede"><span data-brand-name></span> pulls in your Canvas assignments, grades and teacher announcements, then helps you plan, write and study with an AI coach. It runs on your own computer.</p>
+    </div>
+    <div class="hero-demo">
+      <iframe id="chatDemo" src="chat-demo.html" title="Animated demo of the Northstar app. On the main screen a student asks about grades, what is due, a syllabus policy, announcements, starting an essay and saving a file; the matching sidebar item lights up and answers appear in the chat, with compact cards for grades, what is due and a saved file. Controls below the window jump between scenes."></iframe>
+      <p class="cap"><span class="tag illus">Animation with demo data</span> Built from the app's own screens and cards. Pick a scene below the window, or hover to pause.</p>
+    </div>
+    <div class="hero-cta">
+      <div class="cta">
+      <a class="btn btn-pri btn-lg" id="dlMac" href="https://github.com/remyreynolds/public-one/releases/download/v0.1.57/Northstar-0.1.57-arm64.dmg" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.7c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9-.7 0-1.8-.8-3-.8-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.9zM14.1 5.9c.6-.8 1.1-1.8.9-2.9-.9 0-2 .6-2.6 1.4-.6.7-1.1 1.8-1 2.8 1 .1 2-.5 2.7-1.3z"/></svg>
+        <span><span class="two">Download for Mac</span><small id="macSub">Apple Silicon (M1 or newer)</small></span>
+      </a>
+      <a class="btn btn-sec btn-lg" id="dlWin" href="https://github.com/remyreynolds/public-one/releases/download/v0.1.57/Northstar-0.1.57-Setup.exe" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.5l7.6-1v7H3zM11.6 4.4L21 3v8.5h-9.4zM3 12.5h7.6v7L3 18.5zM11.6 12.5H21V21l-9.4-1.3z"/></svg>
+        <span><span class="two">Download for Windows</span><small id="winSub">Windows 10 or 11, 64-bit</small></span>
+      </a>
+    </div>
+    <p class="meta" id="dlMeta" aria-live="polite">Version <b>0.1.57</b> · <a href="https://github.com/remyreynolds/public-one/releases" rel="noopener">All releases</a>. Mac app not notarized yet: <a href="#notarized" data-open-faq>how to open it the first time</a>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= ASSISTANTS (MCP) ================= -->
+<section class="alt" id="assistants" aria-labelledby="mcp-h">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2 id="mcp-h">Bring your classes into ChatGPT, Claude and Codex</h2>
+      <p><span data-brand-name></span> includes a local connector (MCP), so the ChatGPT, Claude Desktop, Claude Code or Codex you already use can work with your school info, right on your computer.</p>
+    </div>
+    <ul class="can">
+      <li>Search your downloaded Canvas files and see the exact page</li>
+      <li>Read a syllabus with page citations</li>
+      <li>List what is due, and check grades and announcements</li>
+      <li>Save the original file to a folder you approve</li>
+    </ul>
+    <ol class="steps3">
+      <li><b>Download the app</b>Install <span data-brand-name></span> and sign in to Canvas the usual way.</li>
+      <li><b>Open the connections</b>Go to <b style="display:inline">Settings &rsaquo; Connections &rsaquo; Assistants outside <span data-brand-name></span></b>.</li>
+      <li><b>Set it up</b>Choose <b style="display:inline">Set up for Claude</b>, <b style="display:inline">Codex</b> or <b style="display:inline">ChatGPT</b> and follow the short steps. After an app update, reconnect once.</li>
+    </ol>
+
+    <h3 class="sub-h">And in your chat app</h3>
+    <div class="shots">
+      <figure>
+        <div class="illus-wrap">
+          <div class="mock gpt" role="img" aria-label="Illustration of a ChatGPT-style chat: the student asks what is due soon; the assistant used Northstar and lists the assignment due.">
+            <div class="mbar">ChatGPT</div>
+            <div class="mbody">
+              <div class="mq">What is due soon in my classes?</div>
+              <span class="tool"><i></i>Used Northstar &middot; list_assignments</span>
+              <div><p><b>ECO 4335, Health Economics</b></p><ul><li>Paper 1 response is due <b>Oct 30, 11:59 PM</b> (100 pts).</li></ul><p style="margin-top:8px;color:#666;font-size:13.5px">From your saved Canvas snapshot, last synced Oct 20.</p></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><span class="tag illus">Illustration with demo data</span> Drawn in the general style of a ChatGPT chat. Not a screenshot.</figcaption>
+      </figure>
+      <figure>
+        <div class="illus-wrap">
+          <div class="mock cld" role="img" aria-label="Illustration of a Claude-style chat: the student asks which file mentions a phrase; the assistant used Northstar and answers Paper 1.pdf, page 2.">
+            <div class="mbar">Claude</div>
+            <div class="mbody">
+              <div class="mq">Which of my course files mentions Carpenter and Dobkin?</div>
+              <span class="tool"><i></i>Used Northstar &middot; search_northstar</span>
+              <div><p>It is in <b>Paper 1.pdf</b>, on <b>page 2 of 3</b><span class="chip">p. 2</span></p><blockquote>&ldquo;Section 2 reviews Carpenter and Dobkin (2011), who use a regression discontinuity at age 21&hellip;&rdquo;</blockquote></div>
+            </div>
+          </div>
+        </div>
+        <figcaption><span class="tag illus">Illustration with demo data</span> Drawn in the general style of a Claude chat. Not a screenshot.</figcaption>
+      </figure>
+    </div>
+    <p class="cap">You choose what each assistant can see. Only Canvas is shared by default; change it any time in Settings &rsaquo; Connections.</p>
+  </div>
+</section>
+
+<!-- ================= FEATURES ================= -->
+<section id="features">
+  <div class="wrap">
+    <div class="sec-head">
+      <h2>Built around how a semester really goes</h2>
+      <p>Northstar reads your classes and keeps the whole picture in one window, so you spend less time hunting and more time doing.</p>
+    </div>
+    <div class="shot-hero feature-shot">
+      <div class="frame">
+        <div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img class="theme-img light" src="img/home-light.jpg" width="1920" height="1200" loading="lazy" alt="The Northstar home screen: a sidebar with Today, Assignments, Studio, Grades, Announcements and Email, and a chat box asking what you are working on.">
+        <img class="theme-img dark" src="img/home-dark.jpg" width="1920" height="1200" loading="lazy" alt="The Northstar home screen in dark mode.">
+      </div>
+    </div>
+
+
+    <div class="feature">
+      <div class="ftext">
+        <span class="kicker">Today</span>
+        <h3>Know what to do next</h3>
+        <p>Open the app and see what is due, what is late and what to start first, across every class.</p>
+        <ul><li>One list of today's work, sorted by what matters</li><li>Calendar-aware: plans work blocks around your events</li><li>Quiet reminders for due dates and missing work</li></ul>
+      </div>
+      <div class="frame"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img class="theme-img light" src="img/today-light.jpg" width="1920" height="1200" loading="lazy" alt="Northstar's Today page listing the work due, grouped by urgency.">
+        <img class="theme-img dark" src="img/today-dark.jpg" width="1920" height="1200" loading="lazy" alt="Northstar's Today page in dark mode.">
+      </div>
+    </div>
+
+    <div class="feature flip">
+      <div class="ftext">
+        <span class="kicker">Assignments</span>
+        <h3>Every Canvas assignment, finally in one list</h3>
+        <p>Upcoming, missing and done, color-coded by class, with due dates written the way you think about them: tomorrow, in 3 days.</p>
+        <ul><li>Filter by class or status in one click</li><li>Points, type and due-date changes at a glance</li><li>Start a Studio or ask the coach straight from a row</li></ul>
+      </div>
+      <div class="frame"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img class="theme-img light" src="img/assignments-light.jpg" width="1920" height="1200" loading="lazy" alt="The Assignments page: this week and next week, with class colors, due dates and points.">
+        <img class="theme-img dark" src="img/assignments-dark.jpg" width="1920" height="1200" loading="lazy" alt="The Assignments page in dark mode.">
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="ftext">
+        <span class="kicker">Grades</span>
+        <h3>See where you stand, and what it takes</h3>
+        <p>Your estimated GPA and a card for each class, with a trend line and the weight of every category.</p>
+        <ul><li>"Keep an A−: you need 82% or better on the next essay"</li><li>What-if calculator to try a score before it happens</li><li>Flags the class that needs attention first</li></ul>
+      </div>
+      <div class="frame"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img class="theme-img light" src="img/grades-light.jpg" width="1920" height="1200" loading="lazy" alt="The Grades page: estimated GPA and a card per class with trend lines and category weights.">
+        <img class="theme-img dark" src="img/grades-dark.jpg" width="1920" height="1200" loading="lazy" alt="The Grades page in dark mode.">
+      </div>
+    </div>
+
+    <div class="feature flip">
+      <div class="ftext">
+        <span class="kicker">Announcements</span>
+        <h3>Teacher posts you will actually read</h3>
+        <p>Every announcement from every class in one inbox, with a plain-language note on what it means for you.</p>
+        <ul><li>Unread first, filter by class</li><li>"What this means for you" summary on each post</li><li>Ask the coach about it, or open it in Canvas</li></ul>
+      </div>
+      <div class="frame"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img class="theme-img light" src="img/announcements-light.jpg" width="1920" height="1200" loading="lazy" alt="The Announcements page with teacher posts and a summary of what one post means for the student.">
+        <img class="theme-img dark" src="img/announcements-dark.jpg" width="1920" height="1200" loading="lazy" alt="The Announcements page in dark mode.">
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="ftext">
+        <span class="kicker">Studio</span>
+        <h3>Writing help that keeps your voice</h3>
+        <p>Studio ties a workspace to an assignment, its rubric and your calendar. It helps you outline, draft, revise and check your work, one step at a time.</p>
+        <ul><li>Reads the rubric, so hints match the grading</li><li>Won't write graded work for you; every AI word is marked</li><li>Saved on your computer, with version history</li></ul>
+      </div>
+      <div class="frame"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+        <img class="theme-img light" src="img/studio-light.jpg" width="1920" height="1200" loading="lazy" alt="Studio open on an essay: steps from outline to hand-off, a blank draft, and the coach in a side panel.">
+        <img class="theme-img dark" src="img/studio-dark.jpg" width="1920" height="1200" loading="lazy" alt="Studio in dark mode.">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MORE ================= -->
+<section class="alt" aria-labelledby="more-h">
+  <div class="wrap">
+    <div class="sec-head"><h2 id="more-h">Works with the AI you already use</h2><p>Bring your own Claude or ChatGPT. You decide how.</p></div>
+    <div class="grid3">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.6L19.5 10l-5.6 1.9L12 17.5l-1.9-5.6L4.5 10l5.6-1.4z"/></svg></div><h3>A coach in every screen</h3><p>Ask about an assignment, a grade or an announcement. The coach already knows your classes.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3v5M15 3v5M7 8h10v4a5 5 0 0 1-10 0zM12 17v4"/></svg></div><h3>Connect Claude or ChatGPT</h3><p>Use your own subscription. In Settings, Connections, choose which assistants may see your school info.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 5h14v14H5zM5 12h14M12 5v14"/></svg></div><h3>Calendar and email</h3><p>See school email and your calendar next to your classes, and plan study blocks around real events.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= COLOR SCHEMES ================= -->
+<section id="schemes" aria-labelledby="schemes-h">
+  <div class="wrap">
+    <div class="sec-head"><h2 id="schemes-h">Make it yours</h2><p>Six color schemes, each in light and dark. Pick one in Settings; try them here.</p></div>
+    <ul class="schemes" id="schemeList" aria-label="Color scheme"></ul>
+    <div class="scheme-shot frame" id="schemeFrame"><div class="chrome" aria-hidden="true"><i></i><i></i><i></i></div>
+      <img id="schemeImg" src="img/settings-general-light.jpg" width="1920" height="1200" loading="lazy" alt="Northstar Settings, General, with the color scheme picker.">
+    </div>
+    <p class="scheme-note">Screenshot: Settings &gt; General &gt; Appearance. Choosing a scheme here also tints this page.</p>
+  </div>
+</section>
+
+<!-- ================= PRIVACY ================= -->
+<section class="alt" id="privacy" aria-labelledby="priv-h">
+  <div class="wrap">
+    <div class="sec-head"><h2 id="priv-h">Your school life stays on your computer</h2></div>
+    <p class="priv-big">Northstar runs on your Mac or PC. Your assignments, grades and drafts are stored there, and you decide what Claude or ChatGPT can see.</p>
+    <div class="privacy">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><h3>Runs locally</h3><p>Your classes, grades and drafts are saved on this computer, not in someone else's cloud.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>You choose what is shared</h3><p>Each category (Canvas, files, chats, email, calendar and more) is its own switch, off unless you turn it on. Turn it off and it stops at once.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><h3>Passwords never shared</h3><p>School passwords, sign-in cookies and API keys are never given to an AI assistant.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= REQUIREMENTS ================= -->
+<section id="requirements" aria-labelledby="req-h">
+  <div class="wrap">
+    <div class="sec-head"><h2 id="req-h">Requirements</h2></div>
+    <div class="reqs">
+      <div class="card"><h3>Mac</h3><ul><li>Apple Silicon (M1 or newer)</li><li>macOS 12 Monterey or newer</li><li>About 2 GB free space</li></ul></div>
+      <div class="card"><h3>Windows</h3><ul><li>Windows 10 or 11, 64-bit</li><li>About 2 GB free space</li><li>An internet connection to sync Canvas</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="alt" id="faq" aria-labelledby="faq-h">
+  <div class="wrap">
+    <div class="sec-head"><h2 id="faq-h">Questions</h2></div>
+    <div class="faq">
+      <details id="notarized">
+        <summary>The Mac says it can't verify the app. Is it safe?</summary>
+        <div class="ans">
+          <p>Honest answer: the Mac app is not notarized by Apple yet, so macOS shows a warning the first time. Northstar is the same file everyone gets from this page. To open it once:</p>
+          <ol>
+            <li>Open the downloaded <b>.dmg</b> and drag <span data-brand-name></span> to Applications.</li>
+            <li>In Applications, <b>right-click</b> (or Control-click) the app and choose <b>Open</b>, then <b>Open</b> again.</li>
+            <li>Or: try to open it, then go to <b>System Settings &gt; Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>.</li>
+          </ol>
+          <p>You only need to do this the first time.</p>
+        </div>
+      </details>
+      <details>
+        <summary>How do updates work?</summary>
+        <div class="ans"><p>Updates install from inside the app. When a new version is ready, <span data-brand-name></span> tells you and updates itself. You never need to come back to this page, though the button above always gets the newest version.</p></div>
+      </details>
+      <details>
+        <summary>Does it need my school password?</summary>
+        <div class="ans"><p>You sign in to Canvas the way you normally do, in the app. Northstar never gives your passwords or sign-in cookies to an AI assistant.</p></div>
+      </details>
+      <details>
+        <summary>What can Claude, ChatGPT or Codex see through <span data-brand-name></span>?</summary>
+        <div class="ans"><p>Only what you switch on. Canvas is the only thing shared by default; Library files, chats, email, calendar and more are each their own switch under Settings &rsaquo; Connections &rsaquo; Assistants outside <span data-brand-name></span>. It all stays on your computer, and turning a switch off stops sharing right away. Passwords and sign-in cookies are never shared, and the connector only reads: it cannot submit work or change your school records.</p></div>
+      </details>
+      <details>
+        <summary>Do I need to reconnect after an update?</summary>
+        <div class="ans"><p>Once, yes. After <span data-brand-name></span> updates, open Settings &rsaquo; Connections &rsaquo; Assistants outside <span data-brand-name></span> and set up your assistant again so it points at the new version.</p></div>
+      </details>
+      <details>
+        <summary>Can I choose what Claude or ChatGPT sees?</summary>
+        <div class="ans"><p>Yes. In Settings, Connections, you switch each kind of information on or off. Only Canvas is on by default, and turning something off takes effect right away.</p></div>
+      </details>
+      <details>
+        <summary>Will it write my essays?</summary>
+        <div class="ans"><p>No. Studio helps you plan, revise and check your own work, and it marks every AI-written word so you always know what is yours.</p></div>
+      </details>
+      <details>
+        <summary>Does it work on Intel Macs or Linux?</summary>
+        <div class="ans"><p>Not yet. The Mac app is built for Apple Silicon (M1 or newer), and Windows 10 or 11 is supported.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ================= FINAL CTA ================= -->
+<section class="final">
+  <div class="wrap">
+    <span class="brand-big" data-brand-logo data-size="64"></span>
+    <h2>Start your semester calm</h2>
+    <p>Download <span data-brand-name></span>, sign in to Canvas, and see everything in one place.</p>
+    <div class="cta">
+      <a class="btn btn-pri btn-lg" data-dl="mac" href="https://github.com/remyreynolds/public-one/releases/download/v0.1.57/Northstar-0.1.57-arm64.dmg" rel="noopener"><span class="two">Download for Mac</span></a>
+      <a class="btn btn-sec btn-lg" data-dl="win" href="https://github.com/remyreynolds/public-one/releases/download/v0.1.57/Northstar-0.1.57-Setup.exe" rel="noopener"><span class="two">Download for Windows</span></a>
+    </div>
+    <p class="meta" data-dl-meta>Version <b>0.1.57</b> · <a href="https://github.com/remyreynolds/public-one/releases" rel="noopener">All releases</a>. Mac app not notarized yet: <a href="#notarized" data-open-faq>how to open it the first time</a>.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span>© <span id="yr"></span> <span data-brand-name></span>. Screenshots use sample data.</span>
+    <span><a href="https://github.com/remyreynolds/public-one/releases" rel="noopener">All releases</a></span>
+  </div>
+</footer>
+
+<script>
+/* ================= ONE PLACE FOR THE NAME AND LOGO =================
+   Mirrors src/brand-name.js and src/brand.jsx in the app (placeholder mark: four-point star on a
+   rounded tile). Change BRAND (or STAR) here and every name and logo on this page follows. */
+var BRAND = { name: "Northstar", wordmark: "northstar", tagline: "Your study coach", accent: "#d0743b" };
+var STAR = "M32 6.5 L36.6 27.4 L53 32 L36.6 36.6 L32 51 L27.4 36.6 L11 32 L27.4 27.4 Z";
+function brandLogo(size) {
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 64 64" role="img" aria-label="' + BRAND.name + ' logo">' +
+    '<rect width="64" height="64" rx="15" fill="var(--logo-tile)"/><path d="' + STAR + '" fill="var(--logo-star)"/>' +
+    '<circle cx="32" cy="32" r="3.4" fill="var(--accent)"/></svg>';
+}
+(function applyBrand() {
+  document.querySelectorAll("[data-brand-name]").forEach(function (el) { el.textContent = BRAND.name; });
+  document.querySelectorAll("[data-brand-wordmark]").forEach(function (el) { el.textContent = BRAND.wordmark; });
+  document.querySelectorAll("[data-brand-tagline]").forEach(function (el) { el.textContent = BRAND.tagline; });
+  document.querySelectorAll("[data-brand-logo]").forEach(function (el) { el.innerHTML = brandLogo(Number(el.getAttribute("data-size")) || 30); });
+  document.getElementById("yr").textContent = new Date().getFullYear();
+  var icon = document.createElement("link");
+  icon.rel = "icon";
+  icon.href = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="15" fill="#1d1c1a"/><path d="' + STAR + '" fill="#f4efe6"/><circle cx="32" cy="32" r="3.4" fill="' + BRAND.accent + '"/></svg>');
+  document.head.appendChild(icon);
+})();
+
+/* ================= Theme toggle ================= */
+(function theme() {
+  var root = document.documentElement, btn = document.getElementById("themeBtn");
+  function sync() { btn.setAttribute("aria-pressed", root.getAttribute("data-theme") === "dark" ? "true" : "false"); applyScheme(currentScheme); if (window.__demoSync) window.__demoSync(); }
+  btn.addEventListener("click", function () {
+    var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("ns-site-theme", next); } catch (err) { /* private mode: fine */ }
+    sync();
+  });
+  window.__themeSync = sync;
+})();
+
+/* ================= Color schemes (accent values from src/lib/color-schemes.js) ================= */
+var SCHEMES = [
+  { id: "warm",     label: "Warm",     light: ["#d0743b", "#9c5022", "#1a1612"], dark: ["#e58a52", "#ec9a66", "#1a1612"] },
+  { id: "indigo",   label: "Indigo",   light: ["#4f2bd9", "#4f2bd9", "#ffffff"], dark: ["#8b6cff", "#a58eff", "#120a2e"] },
+  { id: "ocean",    label: "Ocean",    light: ["#1f6fb5", "#1f6fb5", "#ffffff"], dark: ["#4aa3e8", "#6ab4ee", "#06121c"] },
+  { id: "forest",   label: "Forest",   light: ["#2f7d4f", "#2f7d4f", "#ffffff"], dark: ["#52b87c", "#6fc792", "#07140c"] },
+  { id: "rose",     label: "Rose",     light: ["#c2416b", "#c2416b", "#ffffff"], dark: ["#ee6f93", "#f38aa8", "#1c0910"] },
+  { id: "graphite", label: "Graphite", light: ["#4b5563", "#4b5563", "#ffffff"], dark: ["#aab2c0", "#bcc3cf", "#12151a"] }
+];
+var currentScheme = "warm";
+function hexToRgba(hex, a) { var n = parseInt(hex.slice(1), 16); return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")"; }
+function applyScheme(id) {
+  currentScheme = id;
+  var s = SCHEMES.filter(function (x) { return x.id === id; })[0] || SCHEMES[0];
+  var dark = document.documentElement.getAttribute("data-theme") === "dark";
+  var v = dark ? s.dark : s.light, r = document.documentElement.style;
+  if (id === "warm") { ["--accent", "--accent-text", "--accent-ink", "--accent-soft"].forEach(function (k) { r.removeProperty(k); }); }
+  else { r.setProperty("--accent", v[0]); r.setProperty("--accent-text", v[1]); r.setProperty("--accent-ink", v[2]); r.setProperty("--accent-soft", hexToRgba(v[0], dark ? .16 : .11)); }
+  document.querySelectorAll("#schemeList button").forEach(function (b) { b.setAttribute("aria-pressed", b.getAttribute("data-id") === id ? "true" : "false"); });
+  var img = document.getElementById("schemeImg");
+  var file = "img/settings-general-" + (id === "warm" ? "" : id + "-") + (id === "warm" && dark ? "dark" : "light") + ".jpg";
+  if (img.getAttribute("src") !== file) img.setAttribute("src", file);
+  if (window.__demoSync) window.__demoSync();
+}
+(function buildSchemes() {
+  var ul = document.getElementById("schemeList");
+  SCHEMES.forEach(function (s) {
+    var li = document.createElement("li"), b = document.createElement("button");
+    b.type = "button"; b.setAttribute("data-id", s.id); b.setAttribute("aria-pressed", s.id === "warm" ? "true" : "false");
+    b.innerHTML = '<span class="dot" style="background:' + s.light[0] + '"></span>' + s.label;
+    b.addEventListener("click", function () { applyScheme(s.id); });
+    li.appendChild(b); ul.appendChild(li);
+  });
+  window.__themeSync();
+})();
+
+
+/* ================= Chat demo ================= */
+(function chatDemo() {
+  var frame = document.getElementById("chatDemo");
+  if (!frame) return;
+  function tell(msg) { try { frame.contentWindow.postMessage(msg, "*"); } catch (err) { /* frame not ready */ } }
+  window.__demoSync = function () {
+    var root = document.documentElement, page = root.getAttribute("data-theme") === "dark", dark = true, vars = {};
+    var s = SCHEMES.filter(function (x) { return x.id === currentScheme; })[0];
+    if (s && s.id !== "warm") { var v = dark ? s.dark : s.light; vars = { "--v2-accent": v[0], "--v2-accent-text": v[1], "--v2-accent-ink": v[2], "--v2-accent-soft": hexToRgba(v[0], dark ? .16 : .11) }; }
+    tell({ type: "ns-theme", theme: page ? "dark" : "light", vars: vars });
+  };
+  frame.addEventListener("load", function () { window.__demoSync(); });
+  if ("IntersectionObserver" in window) new IntersectionObserver(function (entries) { tell({ type: "ns-visible", on: entries[0].isIntersecting }); }, { threshold: 0.15 }).observe(frame);
+})();
+
+/* ================= Downloads: hard-coded 0.1.57 links, upgraded to the newest release when GitHub answers ================= */
+(function downloads() {
+  var REPO = "remyreynolds/public-one";
+  var macLinks = [document.getElementById("dlMac")].concat([].slice.call(document.querySelectorAll('[data-dl="mac"]')));
+  var winLinks = [document.getElementById("dlWin")].concat([].slice.call(document.querySelectorAll('[data-dl="win"]')));
+  var metas = [document.getElementById("dlMeta")].concat([].slice.call(document.querySelectorAll("[data-dl-meta]")));
+  var TAIL = ' · <a href="https://github.com/' + REPO + '/releases" rel="noopener">All releases</a>. Mac app not notarized yet: <a href="#notarized" data-open-faq>how to open it the first time</a>.';
+  function mb(bytes) { return bytes >= 1e9 ? (bytes / 1e9).toFixed(2) + " GB" : Math.round(bytes / 1e6) + " MB"; }
+  function setMeta(html) { metas.forEach(function (m) { if (m) m.innerHTML = html; }); }
+  function pick(assets, suffix) { return assets.filter(function (a) { return a.name.slice(-suffix.length) === suffix; })[0]; }
+  /* If anything below fails (offline, rate-limited, odd release), the page simply keeps the hard-coded 0.1.57 links and label. */
+  var ctl = typeof AbortController === "function" ? new AbortController() : null;
+  var timer = ctl ? setTimeout(function () { ctl.abort(); }, 8000) : null;
+  fetch("https://api.github.com/repos/" + REPO + "/releases/latest", { headers: { Accept: "application/vnd.github+json" }, signal: ctl ? ctl.signal : undefined })
+    .then(function (res) { if (!res.ok) throw new Error("HTTP " + res.status); return res.json(); })
+    .then(function (rel) {
+      if (timer) clearTimeout(timer);
+      var assets = rel.assets || [], mac = pick(assets, "-arm64.dmg"), win = pick(assets, "-Setup.exe");
+      var version = String(rel.tag_name || "").replace(/^v/i, "");
+      if (!mac || !win || !/^\d+\.\d+\.\d+/.test(version)) throw new Error("release incomplete");
+      macLinks.forEach(function (a) { if (a) a.href = mac.browser_download_url; });
+      winLinks.forEach(function (a) { if (a) a.href = win.browser_download_url; });
+      var macSub = document.getElementById("macSub"), winSub = document.getElementById("winSub");
+      if (macSub) macSub.textContent = "Apple Silicon · " + mb(mac.size);
+      if (winSub) winSub.textContent = "Windows 10/11 · " + mb(win.size);
+      var bits = ["Version <b>" + version.replace(/[<>&"]/g, "") + "</b>"];
+      if (rel.published_at) bits.push("released " + new Date(rel.published_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }));
+      setMeta(bits.join(", ") + TAIL);
+    })
+    .catch(function () { if (timer) clearTimeout(timer); });
+  document.addEventListener("click", function (ev) {
+    var t = ev.target.closest && ev.target.closest("[data-open-faq]");
+    if (t) { var d = document.getElementById("notarized"); if (d) d.open = true; }
+  });
+  if (location.hash === "#notarized") { var d0 = document.getElementById("notarized"); if (d0) d0.open = true; }
+})();
+</script>
+</body>
+</html>
